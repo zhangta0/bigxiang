@@ -10,7 +10,7 @@ import java.net.ServerSocket;
  */
 public class PortAutoGet {
 
-    static int port = 4003;
+    public static int port = 4003;
 
     static {
         int initPort = 1024;
