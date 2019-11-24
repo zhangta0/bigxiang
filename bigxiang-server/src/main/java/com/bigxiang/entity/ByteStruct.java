@@ -9,12 +9,15 @@ public class ByteStruct {
 
     private byte serializeType;
 
+    private long seq;
+
     private int length;
 
     private byte[] body;
 
-    public ByteStruct(byte serializeType, int length, byte[] body) {
+    public ByteStruct(byte serializeType, long seq, int length, byte[] body) {
         this.serializeType = serializeType;
+        this.seq = seq;
         this.length = length;
         this.body = body;
     }
@@ -43,6 +46,15 @@ public class ByteStruct {
 
     public ByteStruct setLength(int length) {
         this.length = length;
+        return this;
+    }
+
+    public long getSeq() {
+        return seq;
+    }
+
+    public ByteStruct setSeq(long seq) {
+        this.seq = seq;
         return this;
     }
 }

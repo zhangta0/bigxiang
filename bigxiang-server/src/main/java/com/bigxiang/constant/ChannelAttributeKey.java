@@ -10,4 +10,5 @@ import io.netty.util.AttributeKey;
 public class ChannelAttributeKey {
 
     public static AttributeKey SERIALIZE_TYPE = AttributeKey.newInstance("serializeType");
+    public static AttributeKey REQUEST_SEQ = AttributeKey.newInstance("requestSeq");
 }

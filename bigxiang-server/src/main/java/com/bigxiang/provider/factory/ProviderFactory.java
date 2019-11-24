@@ -1,6 +1,8 @@
 package com.bigxiang.provider.factory;
 
+import com.bigxiang.invoker.entity.InvokeRequest;
 import com.bigxiang.provider.config.ProviderConfig;
+import com.bigxiang.util.ClassConvert;
 import com.google.common.collect.Maps;
 
 import java.lang.reflect.Field;
@@ -28,7 +30,7 @@ public class ProviderFactory {
         PROVIDER_FACTORY.put(url, providerConfig);
         List<Method> methods = providerConfig.getMethods();
         if (null != methods && methods.size() > 0) {
-            methods.forEach(method -> {
+            for (Method method : methods) {
                 String key = getMethodKey(providerConfig.getInterfaceName(), method);
                 Map<ParamWrap, Method> paramWrapMethodMap = PROVIDER_METHOD_FACTORY.get(key);
                 if (paramWrapMethodMap == null) {
@@ -36,17 +38,42 @@ public class ProviderFactory {
                     PROVIDER_METHOD_FACTORY.put(key, paramWrapMethodMap);
                 }
                 Class<?>[] paramClz = method.getParameterTypes();
-                paramWrapMethodMap.put(new ParamWrap(paramClz), method);
-            });
+                paramWrapMethodMap.put(new ParamWrap(ClassConvert.convert(paramClz)), method);
+            }
         }
     }
 
-    public static getFiled(String param) {
+    public static Object getBean(String url) {
+        ProviderConfig providerConfig = PROVIDER_FACTORY.get(url);
+        if (null != providerConfig) {
+            providerConfig.getBean();
+        }
+        return null;
+    }
 
+    public static Method getMethod(InvokeRequest invokeRequest) {
+        ProviderConfig providerConfig = PROVIDER_FACTORY.get(invokeRequest.getUrl());
+        if (null == providerConfig) {
+            return null;
+        }
+        String methodKey = getMethodKey(providerConfig.getInterfaceName(), invokeRequest.getMethodName());
+        Map<ParamWrap, Method> paramWrapMethodMap = PROVIDER_METHOD_FACTORY.get(methodKey);
+        if (null == paramWrapMethodMap || paramWrapMethodMap.size() == 0) {
+            return null;
+        }
+        return paramWrapMethodMap.get(new ParamWrap(invokeRequest.getArgs()));
+    }
+
+    public static Map<String, ProviderConfig> getProviderFactory() {
+        return PROVIDER_FACTORY;
     }
 
     private static String getMethodKey(String interfaceName, Method method) {
-        return interfaceName + "#" + method.getName();
+        return getMethodKey(interfaceName, method.getName());
+    }
+
+    private static String getMethodKey(String interfaceName, String methodName) {
+        return interfaceName + "#" + methodName;
     }
 
     static class ParamWrap {
@@ -54,21 +81,10 @@ public class ProviderFactory {
         private String[] clzStr;
         private int hashcode;
 
-        public ParamWrap(Class<?>[] paramClz) {
-            clzStr = new String[paramClz.length];
+        public ParamWrap(String[] clzStr) {
+            this.clzStr = clzStr;
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < paramClz.length; i++) {
-                clzStr[i] = paramClz[i].getName();
-                sb.append(clzStr[i]).append("#");
-            }
-            hashcode = sb.toString().hashCode();
-        }
-
-        public ParamWrap(String[] paramClz) {
-            clzStr = new String[paramClz.length];
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < paramClz.length; i++) {
-                //clzStr[i] = paramClz[i].getName();
+            for (int i = 0; i < clzStr.length; i++) {
                 sb.append(clzStr[i]).append("#");
             }
             hashcode = sb.toString().hashCode();

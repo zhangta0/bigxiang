@@ -10,18 +10,35 @@ import java.net.ServerSocket;
  */
 public class PortAutoGet {
 
-    public static int port = 4003;
+    private static Integer default_port = 4428;
+    private static Integer port = null;
 
-    static {
+    public static int port() {
         int initPort = 1024;
-
-        while (true) {
-            try {
-                new ServerSocket(port);
-                break;
-            } catch (IOException e) {
-                port = initPort++;
+        ServerSocket serverSocket = null;
+        if (null != port) {
+            return port;
+        }
+        synchronized (PortAutoGet.class) {
+            if (null == port) {
+                while (true) {
+                    try {
+                        serverSocket = new ServerSocket(default_port);
+                        port = default_port;
+                        break;
+                    } catch (IOException e) {
+                        port = initPort++;
+                    } finally {
+                        if (null != serverSocket) {
+                            try {
+                                serverSocket.close();
+                            } catch (IOException e) {
+                            }
+                        }
+                    }
+                }
             }
+            return port;
         }
     }
 }

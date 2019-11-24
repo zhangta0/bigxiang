@@ -1,10 +1,11 @@
 package com.bigxiang.invoker.proxy;
 
-import com.bigxiang.factory.InvokerClientFactoty;
-import com.bigxiang.invoker.client.InvokerClient;
+import com.bigxiang.invoker.factory.InvokerClientFactoty;
+import com.bigxiang.server.InvokerClient;
 import com.bigxiang.invoker.config.InvokeConfig;
 import com.bigxiang.invoker.entity.InvokeRequest;
 import com.bigxiang.registry.ZkRegistry;
+import com.bigxiang.util.ClassConvert;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -29,13 +30,14 @@ public class InvokeInvocation implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         InvokerClient client = InvokerClientFactoty.get(invokeConfig);
         InvokeRequest request = new InvokeRequest();
-        request.setArgs(method.getParameterTypes());
+        request.setArgs(ClassConvert.convert(method.getParameterTypes()));
         request.setInterfaceName(invokeConfig.getInterfaceClz().getName());
-        request.setMethod(method.getName());
-        request.setSerializer(invokeConfig.getSerializer());
+        request.setMethodName(method.getName());
+        request.setReturnType(method.getReturnType());
         request.setUrl(invokeConfig.getUrl());
         request.setValues(Arrays.asList(args));
         request.setTimeout(invokeConfig.getTimeout());
+        request.setSerializer(invokeConfig.getSerializer());
         return client.call(request);
     }
 }

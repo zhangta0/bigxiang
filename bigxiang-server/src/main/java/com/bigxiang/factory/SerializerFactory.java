@@ -17,7 +17,7 @@ public class SerializerFactory {
 
     static final Map<Byte, Serializer> SERIALIZER = Maps.newHashMap();
 
-    static void init() {
+    static public void init() {
         SERIALIZER.put(SerializerEnum.JSON.code, new JsonSerializer());
         SERIALIZER.put(SerializerEnum.HESSIAN.code, new HessianSerializer());
     }

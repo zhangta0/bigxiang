@@ -12,27 +12,21 @@ import java.util.UUID;
  */
 public class InvokeRequest implements Serializable {
 
-    private static final UUID uuid = UUID.randomUUID();
-
-    private String seq = uuid.toString();
-
     private String url;
 
     private String interfaceName;
 
-    private String method;
+    private String methodName;
 
-    private Class<?>[] args;
+    private String[] args;
 
     private List<Object> values;
 
     private long timeout;
 
-    private byte serializer;
+    private transient byte serializer;
 
-    public Class<?>[] getArgs() {
-        return args;
-    }
+    private transient Class<?> returnType;
 
     public String getUrl() {
         return url;
@@ -40,11 +34,6 @@ public class InvokeRequest implements Serializable {
 
     public InvokeRequest setUrl(String url) {
         this.url = url;
-        return this;
-    }
-
-    public InvokeRequest setArgs(Class<?>[] args) {
-        this.args = args;
         return this;
     }
 
@@ -57,15 +46,6 @@ public class InvokeRequest implements Serializable {
         return this;
     }
 
-    public String getMethod() {
-        return method;
-    }
-
-    public InvokeRequest setMethod(String method) {
-        this.method = method;
-        return this;
-    }
-
     public List<Object> getValues() {
         return values;
     }
@@ -73,10 +53,6 @@ public class InvokeRequest implements Serializable {
     public InvokeRequest setValues(List<Object> values) {
         this.values = values;
         return this;
-    }
-
-    public String getSeq() {
-        return seq;
     }
 
     public long getTimeout() {
@@ -97,13 +73,39 @@ public class InvokeRequest implements Serializable {
         return this;
     }
 
+    public String[] getArgs() {
+        return args;
+    }
+
+    public InvokeRequest setArgs(String[] args) {
+        this.args = args;
+        return this;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public InvokeRequest setMethodName(String methodName) {
+        this.methodName = methodName;
+        return this;
+    }
+
+    public Class<?> getReturnType() {
+        return returnType;
+    }
+
+    public InvokeRequest setReturnType(Class<?> returnType) {
+        this.returnType = returnType;
+        return this;
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("InvokeRequest{");
-        sb.append("seq='").append(seq).append('\'');
         sb.append(", url='").append(url).append('\'');
         sb.append(", interfaceName='").append(interfaceName).append('\'');
-        sb.append(", method='").append(method).append('\'');
+        sb.append(", methodName='").append(methodName).append('\'');
         sb.append(", args=").append(args == null ? "null" : Arrays.asList(args).toString());
         sb.append(", values=").append(values);
         sb.append(", timeout=").append(timeout);
