@@ -2,14 +2,14 @@ package com.bigxiang.server;
 
 import com.bigxiang.entity.ByteStruct;
 import com.bigxiang.entity.HostInfo;
-import com.bigxiang.invoker.factory.InvokerClientFactoty;
 import com.bigxiang.factory.SerializerFactory;
 import com.bigxiang.handler.UnPackageHandle;
-import com.bigxiang.invoker.handle.ReceiveHandle;
-import com.bigxiang.invoker.factory.RequestFactory;
-import com.bigxiang.invoker.proxy.RequestTask;
 import com.bigxiang.invoker.config.InvokeConfig;
 import com.bigxiang.invoker.entity.InvokeRequest;
+import com.bigxiang.invoker.factory.InvokerClientFactoty;
+import com.bigxiang.invoker.factory.RequestFactory;
+import com.bigxiang.invoker.handle.ReceiveHandle;
+import com.bigxiang.invoker.proxy.RequestTask;
 import com.bigxiang.registry.ZkRegistry;
 import com.bigxiang.serialize.iface.Serializer;
 import io.netty.bootstrap.Bootstrap;
@@ -21,6 +21,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -30,16 +31,28 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class InvokerClient {
 
-    private static Channel channel;
-    private static boolean closed;
+    private Channel channel;
+    private boolean closed;
     private static final ZkRegistry registry = new ZkRegistry();
     private final AtomicLong atomic = new AtomicLong();
 
     private InvokeConfig invokeConfig;
     private HostInfo hostInfo;
+    private Bootstrap bootstrap;
 
     public InvokerClient(InvokeConfig invokeConfig) {
         this.invokeConfig = invokeConfig;
+        bootstrap = new Bootstrap();
+        bootstrap.group(new NioEventLoopGroup()).channel(NioSocketChannel.class)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel socketChannel) throws Exception {
+                        socketChannel.pipeline()
+                                .addLast(new UnPackageHandle())
+                                .addLast(new ReceiveHandle());
+                    }
+                });
         hostInfo = registry.getHost(invokeConfig.getUrl());
     }
 
@@ -48,20 +61,15 @@ public class InvokerClient {
             throw new Exception("not find provider");
         }
         if (!closed) {
-            Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(new NioEventLoopGroup()).channel(NioSocketChannel.class)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline()
-                                    .addLast(new UnPackageHandle())
-                                    .addLast(new ReceiveHandle());
-                        }
-                    });
+            ChannelFuture cf = bootstrap.connect(hostInfo.getIp(), hostInfo.getPort());
+            if (cf.awaitUninterruptibly(3, TimeUnit.SECONDS)) {
+                if (cf.isSuccess()) {
+                    if (cf.channel().isActive()) {
+                        channel = cf.channel();
+                    }
+                }
+            }
 
-            ChannelFuture cf = bootstrap.connect(hostInfo.getIp(), hostInfo.getPort()).sync();
-            channel = cf.channel();
             InvokerClientFactoty.add(invokeConfig, this);
         }
     }

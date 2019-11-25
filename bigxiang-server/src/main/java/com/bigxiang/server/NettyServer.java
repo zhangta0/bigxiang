@@ -6,15 +6,10 @@ import com.bigxiang.provider.handle.DecodeHandle;
 import com.bigxiang.provider.handle.EncodeHandle;
 import com.bigxiang.provider.handle.ProcessHandle;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 
 /**
  * Created by Zhon.Thao on 2019/2/13.
@@ -38,11 +33,11 @@ public class NettyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        socketChannel.pipeline()
-                                .addLast(new UnPackageHandle())
-                                .addLast(new DecodeHandle())
-                                .addLast(new ProcessHandle())
-                                .addLast(new EncodeHandle());
+                        ChannelPipeline pipeline = socketChannel.pipeline();
+                        pipeline.addLast(new UnPackageHandle());
+                        pipeline.addLast(new DecodeHandle());
+                        pipeline.addLast(new ProcessHandle());
+                        pipeline.addLast(new EncodeHandle());
                     }
                 });
     }
@@ -53,7 +48,7 @@ public class NettyServer {
                 ChannelFuture future = bootstrap.bind(port).sync();
                 channel = future.channel();
                 started = true;
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 System.err.print("server start fail");
             }
         }

@@ -17,7 +17,6 @@ import java.lang.reflect.Method;
  *
  * @author Zhon.Thao
  */
-@ChannelHandler.Sharable
 public class ProcessHandle extends ChannelInboundHandlerAdapter {
 
     @Override

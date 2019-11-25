@@ -15,9 +15,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
  *
  * @author Zhon.Thao
  */
-@ChannelHandler.Sharable
 public class EncodeHandle extends MessageToByteEncoder {
-
     @Override
     protected void encode(ChannelHandlerContext ctx, Object o, ByteBuf byteBuf) throws Exception {
         if (byteBuf.isWritable()) {

@@ -18,12 +18,10 @@ import java.util.Arrays;
  */
 public class InvokeInvocation implements InvocationHandler {
 
-    private static final ZkRegistry registry = new ZkRegistry();
     private InvokeConfig invokeConfig;
 
     public InvokeInvocation(InvokeConfig invokeConfig) {
         this.invokeConfig = invokeConfig;
-        registry.getHost(invokeConfig.getUrl());
     }
 
     @Override

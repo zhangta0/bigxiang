@@ -16,8 +16,7 @@ import java.util.List;
  *
  * @author Zhon.Thao
  */
-@ChannelHandler.Sharable
-public class UnPackageHandle extends ByteToMessageDecoder{
+public class UnPackageHandle extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws Exception {

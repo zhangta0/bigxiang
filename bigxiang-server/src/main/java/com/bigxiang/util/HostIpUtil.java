@@ -39,7 +39,7 @@ public class HostIpUtil {
                 }
                 local_ip = addresses.get(addresses.size() - 1);
             }
-            return local_ip;
         }
+        return local_ip;
     }
 }

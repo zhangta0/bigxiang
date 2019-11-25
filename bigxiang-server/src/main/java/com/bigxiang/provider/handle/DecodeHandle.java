@@ -6,6 +6,7 @@ import com.bigxiang.invoker.entity.InvokeRequest;
 import com.bigxiang.serialize.iface.Serializer;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageCodec;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.AttributeKey;
 
@@ -16,9 +17,7 @@ import java.util.List;
  *
  * @author Zhon.Thao
  */
-@ChannelHandler.Sharable
-public class DecodeHandle extends MessageToMessageDecoder {
-
+public class DecodeHandle extends MessageToMessageDecoder{
     @Override
     protected void decode(ChannelHandlerContext ctx, Object o, List list) throws Exception {
         if (o instanceof ByteStruct) {
