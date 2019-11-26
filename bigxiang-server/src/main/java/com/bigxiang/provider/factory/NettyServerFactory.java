@@ -1,6 +1,6 @@
 package com.bigxiang.provider.factory;
 
-import com.bigxiang.server.NettyServer;
+import com.bigxiang.netty.NettyServer;
 import com.google.common.collect.Maps;
 
 import java.util.Iterator;

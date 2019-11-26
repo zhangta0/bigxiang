@@ -9,7 +9,7 @@ import java.io.Serializable;
  */
 public class ProviderResponse implements Serializable {
 
-    private byte serializeType;
+    private long seq;
 
     private Object result;
 
@@ -17,17 +17,22 @@ public class ProviderResponse implements Serializable {
         return result;
     }
 
+    public ProviderResponse(long seq, Object result) {
+        this.seq = seq;
+        this.result = result;
+    }
+
     public ProviderResponse setResult(Object result) {
         this.result = result;
         return this;
     }
 
-    public byte getSerializeType() {
-        return serializeType;
+    public long getSeq() {
+        return seq;
     }
 
-    public ProviderResponse setSerializeType(byte serializeType) {
-        this.serializeType = serializeType;
+    public ProviderResponse setSeq(long seq) {
+        this.seq = seq;
         return this;
     }
 }

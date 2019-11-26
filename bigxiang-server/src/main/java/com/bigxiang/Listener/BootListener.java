@@ -1,8 +1,10 @@
 package com.bigxiang.listener;
 
+import com.bigxiang.factory.LoadbalanceFactory;
 import com.bigxiang.factory.SerializerFactory;
 import com.bigxiang.invoker.annotation.Invoker;
 import com.bigxiang.invoker.config.InvokeConfig;
+import com.bigxiang.invoker.factory.InvokerClientFactory;
 import com.bigxiang.invoker.proxy.ProxyFactory;
 import com.bigxiang.provider.annotation.Provider;
 import com.bigxiang.provider.config.ProviderConfig;
@@ -10,8 +12,7 @@ import com.bigxiang.provider.core.PortAutoGet;
 import com.bigxiang.provider.factory.NettyServerFactory;
 import com.bigxiang.provider.factory.ProviderFactory;
 import com.bigxiang.registry.ServiceRegistry;
-import com.bigxiang.server.InvokerClient;
-import com.bigxiang.server.NettyServer;
+import com.bigxiang.netty.NettyServer;
 import com.google.common.collect.Lists;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanInitializationException;
@@ -52,7 +53,7 @@ public class BootListener implements ApplicationListener, BeanPostProcessor {
                 invokeConfig.setTimeout(invoker.timeout());
                 field.setAccessible(true);
                 try {
-                    new InvokerClient(invokeConfig).init();
+                    InvokerClientFactory.init(invokeConfig);
                     field.set(bean, ProxyFactory.newProxyBean(invokeConfig));
                 } catch (Exception e) {
                     throw new BeanInitializationException("init fail", e);
@@ -95,6 +96,7 @@ public class BootListener implements ApplicationListener, BeanPostProcessor {
     public void onApplicationEvent(ApplicationEvent applicationEvent) {
         if (applicationEvent instanceof ContextRefreshedEvent) {
             SerializerFactory.init();
+            LoadbalanceFactory.init();
             NettyServerFactory.start();
             ServiceRegistry.toRegistry();
         }

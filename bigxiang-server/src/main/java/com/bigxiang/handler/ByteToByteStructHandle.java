@@ -1,14 +1,10 @@
 package com.bigxiang.handler;
 
-import com.bigxiang.constant.ChannelAttributeKey;
 import com.bigxiang.entity.ByteStruct;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.util.AttributeKey;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -16,19 +12,19 @@ import java.util.List;
  *
  * @author Zhon.Thao
  */
-public class UnPackageHandle extends ByteToMessageDecoder {
+public class ByteToByteStructHandle extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws Exception {
         if (!byteBuf.isReadable()) {
             return;
         }
-        if (byteBuf.readableBytes() < 13) {
+        if (byteBuf.readableBytes() < 6) {
             return;
         }
 
         byte serializeType = byteBuf.readByte();
-        long seq = byteBuf.readLong();
+        byte messageType = byteBuf.readByte();
         int length = byteBuf.readInt();
 
         if (byteBuf.readableBytes() < length) {
@@ -38,10 +34,7 @@ public class UnPackageHandle extends ByteToMessageDecoder {
         byte[] bytes = new byte[length];
         byteBuf.readBytes(bytes);
 
-        ByteStruct byteStruct = new ByteStruct(serializeType, seq, length, bytes);
+        ByteStruct byteStruct = new ByteStruct(serializeType, messageType, length, bytes);
         list.add(byteStruct);
-
-        ctx.channel().attr(ChannelAttributeKey.SERIALIZE_TYPE).set(serializeType);
-        ctx.channel().attr(ChannelAttributeKey.REQUEST_SEQ).set(seq);
     }
 }

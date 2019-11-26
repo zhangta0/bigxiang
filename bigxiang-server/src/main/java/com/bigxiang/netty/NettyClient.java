@@ -1,17 +1,15 @@
-package com.bigxiang.server;
+package com.bigxiang.netty;
 
-import com.bigxiang.entity.ByteStruct;
 import com.bigxiang.entity.HostInfo;
-import com.bigxiang.factory.SerializerFactory;
-import com.bigxiang.handler.UnPackageHandle;
+import com.bigxiang.handler.ByteStructToByteHandle;
+import com.bigxiang.handler.ByteToByteStructHandle;
 import com.bigxiang.invoker.config.InvokeConfig;
 import com.bigxiang.invoker.entity.InvokeRequest;
-import com.bigxiang.invoker.factory.InvokerClientFactoty;
+import com.bigxiang.invoker.factory.InvokerClientFactory;
 import com.bigxiang.invoker.factory.RequestFactory;
+import com.bigxiang.invoker.handle.EncodeHandle;
 import com.bigxiang.invoker.handle.ReceiveHandle;
 import com.bigxiang.invoker.proxy.RequestTask;
-import com.bigxiang.registry.ZkRegistry;
-import com.bigxiang.serialize.iface.Serializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -29,34 +27,37 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author Zhon.Thao
  */
-public class InvokerClient {
+public class NettyClient {
 
     private Channel channel;
     private boolean closed;
-    private static final ZkRegistry registry = new ZkRegistry();
     private final AtomicLong atomic = new AtomicLong();
+    private final RequestFactory requestFactory = new RequestFactory();
 
     private InvokeConfig invokeConfig;
     private HostInfo hostInfo;
     private Bootstrap bootstrap;
 
-    public InvokerClient(InvokeConfig invokeConfig) {
+    public NettyClient(InvokeConfig invokeConfig, HostInfo hostInfo) {
+        this.hostInfo = hostInfo;
         this.invokeConfig = invokeConfig;
         bootstrap = new Bootstrap();
         bootstrap.group(new NioEventLoopGroup()).channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.TCP_NODELAY, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         socketChannel.pipeline()
-                                .addLast(new UnPackageHandle())
-                                .addLast(new ReceiveHandle());
+                                .addLast(new ByteToByteStructHandle())
+                                .addLast(new ReceiveHandle(requestFactory))
+                                .addLast(new ByteStructToByteHandle())
+                                .addLast(new EncodeHandle());
                     }
                 });
-        hostInfo = registry.getHost(invokeConfig.getUrl());
     }
 
-    public void init() throws Exception {
+    public NettyClient init() throws Exception {
         if (null == hostInfo) {
             throw new Exception("not find provider");
         }
@@ -70,8 +71,9 @@ public class InvokerClient {
                 }
             }
 
-            InvokerClientFactoty.add(invokeConfig, this);
+            InvokerClientFactory.add(invokeConfig, this);
         }
+        return this;
     }
 
     public Object call(InvokeRequest invokeRequest) throws Exception {
@@ -80,12 +82,12 @@ public class InvokerClient {
         }
         RequestTask requestTask = new RequestTask(invokeRequest.getReturnType());
         long seq = atomic.getAndAdd(1);
-        RequestFactory.put(seq, requestTask);
-        Serializer serializer = SerializerFactory.get(invokeRequest.getSerializer());
-        byte[] bytes = serializer.serialize(invokeRequest);
-        ByteStruct byteStruct = new ByteStruct(invokeRequest.getSerializer(), seq, bytes.length, bytes);
-        channel.writeAndFlush(byteStruct);
-        return requestTask.getResponse(invokeRequest.getTimeout());
+        invokeRequest.setSeq(seq);
+        requestFactory.put(seq, requestTask);
+        channel.writeAndFlush(invokeRequest);
+        Object o = requestTask.getResponse(invokeRequest.getTimeout());
+        requestFactory.remove(seq);
+        return o;
     }
 
     public void close() {

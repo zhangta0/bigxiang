@@ -25,7 +25,7 @@ public class ProcessHandle extends ChannelInboundHandlerAdapter {
             InvokeRequest request = (InvokeRequest) msg;
             validate(request);
             Object result = ServiceProcess.process(request);
-            ctx.writeAndFlush(result);
+            ctx.channel().writeAndFlush(result);
         }
     }
 

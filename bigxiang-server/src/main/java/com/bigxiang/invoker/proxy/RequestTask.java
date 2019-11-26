@@ -42,11 +42,15 @@ public class RequestTask {
         return response;
     }
 
-    public RequestTask setResponse(Object response) {
-        this.response = response;
-        condition.signal();
-        isDone = true;
-        return this;
+    public void setResponse(Object response) {
+        lock.lock();
+        try {
+            this.response = response;
+            isDone = true;
+            condition.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     public boolean isDone() {

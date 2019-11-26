@@ -11,4 +11,5 @@ public class ChannelAttributeKey {
 
     public static AttributeKey SERIALIZE_TYPE = AttributeKey.newInstance("serializeType");
     public static AttributeKey REQUEST_SEQ = AttributeKey.newInstance("requestSeq");
+    public static AttributeKey MESSAGE_TYPE = AttributeKey.newInstance("messageType");
 }

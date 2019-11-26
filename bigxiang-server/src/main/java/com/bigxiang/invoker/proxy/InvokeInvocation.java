@@ -1,10 +1,9 @@
 package com.bigxiang.invoker.proxy;
 
-import com.bigxiang.invoker.factory.InvokerClientFactoty;
-import com.bigxiang.server.InvokerClient;
+import com.bigxiang.invoker.factory.InvokerClientFactory;
+import com.bigxiang.netty.NettyClient;
 import com.bigxiang.invoker.config.InvokeConfig;
 import com.bigxiang.invoker.entity.InvokeRequest;
-import com.bigxiang.registry.ZkRegistry;
 import com.bigxiang.util.ClassConvert;
 
 import java.lang.reflect.InvocationHandler;
@@ -26,7 +25,7 @@ public class InvokeInvocation implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        InvokerClient client = InvokerClientFactoty.get(invokeConfig);
+        NettyClient client = InvokerClientFactory.loadBalance(invokeConfig);
         InvokeRequest request = new InvokeRequest();
         request.setArgs(ClassConvert.convert(method.getParameterTypes()));
         request.setInterfaceName(invokeConfig.getInterfaceClz().getName());

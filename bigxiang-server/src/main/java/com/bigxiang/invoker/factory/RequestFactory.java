@@ -12,13 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RequestFactory {
 
-    private static final Map<Long, RequestTask> map = new ConcurrentHashMap<>();
+    private final Map<Long, RequestTask> map = new ConcurrentHashMap<>();
 
-    public static void put(Long seq, RequestTask requestTask) {
+    public void put(Long seq, RequestTask requestTask) {
         map.put(seq, requestTask);
     }
 
-    public static RequestTask get(Long seq) {
-        return map.get(seq);
+    public RequestTask remove(Long seq) {
+        return map.remove(seq);
     }
 }

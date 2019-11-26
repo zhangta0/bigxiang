@@ -12,6 +12,8 @@ import java.util.UUID;
  */
 public class InvokeRequest implements Serializable {
 
+    private long seq;
+
     private String url;
 
     private String interfaceName;
@@ -97,6 +99,15 @@ public class InvokeRequest implements Serializable {
 
     public InvokeRequest setReturnType(Class<?> returnType) {
         this.returnType = returnType;
+        return this;
+    }
+
+    public long getSeq() {
+        return seq;
+    }
+
+    public InvokeRequest setSeq(long seq) {
+        this.seq = seq;
         return this;
     }
 

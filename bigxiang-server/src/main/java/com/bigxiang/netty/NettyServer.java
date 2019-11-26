@@ -1,6 +1,7 @@
-package com.bigxiang.server;
+package com.bigxiang.netty;
 
-import com.bigxiang.handler.UnPackageHandle;
+import com.bigxiang.handler.ByteStructToByteHandle;
+import com.bigxiang.handler.ByteToByteStructHandle;
 import com.bigxiang.provider.factory.NettyServerFactory;
 import com.bigxiang.provider.handle.DecodeHandle;
 import com.bigxiang.provider.handle.EncodeHandle;
@@ -34,9 +35,10 @@ public class NettyServer {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new UnPackageHandle());
+                        pipeline.addLast(new ByteToByteStructHandle());
                         pipeline.addLast(new DecodeHandle());
                         pipeline.addLast(new ProcessHandle());
+                        pipeline.addLast(new ByteStructToByteHandle());
                         pipeline.addLast(new EncodeHandle());
                     }
                 });
@@ -49,7 +51,7 @@ public class NettyServer {
                 channel = future.channel();
                 started = true;
             } catch (Exception e) {
-                System.err.print("server start fail");
+                System.err.print("netty start fail");
             }
         }
     }

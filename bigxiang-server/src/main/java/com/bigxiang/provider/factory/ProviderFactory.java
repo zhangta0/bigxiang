@@ -46,7 +46,7 @@ public class ProviderFactory {
     public static Object getBean(String url) {
         ProviderConfig providerConfig = PROVIDER_FACTORY.get(url);
         if (null != providerConfig) {
-            providerConfig.getBean();
+            return providerConfig.getBean();
         }
         return null;
     }
@@ -78,8 +78,8 @@ public class ProviderFactory {
 
     static class ParamWrap {
 
-        private String[] clzStr;
-        private int hashcode;
+        public String[] clzStr;
+        public int hashcode;
 
         public ParamWrap(String[] clzStr) {
             this.clzStr = clzStr;
@@ -97,7 +97,8 @@ public class ProviderFactory {
 
         @Override
         public boolean equals(Object obj) {
-            String[] var2 = (String[]) obj;
+            ParamWrap wrap = (ParamWrap) obj;
+            String[] var2 = wrap.clzStr;
             if (clzStr.length == 0 && var2.length == 0) {
                 return true;
             }
@@ -105,7 +106,7 @@ public class ProviderFactory {
                 return false;
             }
             int i = 0;
-            for (; i < clzStr.length && clzStr[i++].equals(var2[i++]); ) ;
+            for (; i < clzStr.length && clzStr[i].equals(var2[i]); i++) ;
             return i == clzStr.length;
         }
     }

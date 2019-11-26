@@ -1,9 +1,9 @@
 package com.bigxiang.util;
 
 /**
- * Created by zhangtao47 on 2019/11/21.
+ * Created by Zhon.Thao on 2019/11/21.
  *
- * @author zhangtao47
+ * @author Zhon.Thao
  */
 public class ClassConvert {
 
