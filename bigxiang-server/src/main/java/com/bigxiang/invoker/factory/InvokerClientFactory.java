@@ -1,13 +1,10 @@
 package com.bigxiang.invoker.factory;
 
-import com.bigxiang.config.ConfigContainer;
 import com.bigxiang.entity.HostInfo;
-import com.bigxiang.factory.LoadbalanceFactory;
-import com.bigxiang.loadbalance.iface.LoadBalance;
-import com.bigxiang.netty.NettyClient;
 import com.bigxiang.invoker.config.InvokeConfig;
+import com.bigxiang.listener.InvokeClientListener;
+import com.bigxiang.netty.NettyClient;
 import com.bigxiang.registry.ZkRegistry;
-import com.google.common.collect.Maps;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,16 +21,16 @@ public class InvokerClientFactory {
 
     private static final ZkRegistry registry = new ZkRegistry();
     private static final Map<InvokeConfig, List<NettyClient>> map = new ConcurrentHashMap<>();
-    public static final Map<InvokeConfig, Iterator<?>> iterableMap = new ConcurrentHashMap<>();
-    public static final LoadBalance loadBalance = LoadbalanceFactory.get(ConfigContainer.getLoadbalance());
+    private static final Map<InvokeConfig, Iterator<?>> iterableMap = new ConcurrentHashMap<>();
 
     public static void init(InvokeConfig invokeConfig) throws Exception {
         List<HostInfo> hostInfoList = registry.getHost(invokeConfig.getUrl());
-        if (!hostInfoList.isEmpty()) {
+        if (null != hostInfoList && !hostInfoList.isEmpty()) {
             for (HostInfo hostInfo : hostInfoList) {
-                add(invokeConfig, new NettyClient(invokeConfig, hostInfo).init());
+                new NettyClient(invokeConfig, hostInfo).start();
             }
         }
+        registry.watch(new InvokeClientListener(invokeConfig));
     }
 
     public static void add(InvokeConfig invokeConfig, NettyClient client) {
@@ -48,16 +45,52 @@ public class InvokerClientFactory {
 
     public static void iterable(InvokeConfig invokeConfig) {
         List<NettyClient> nettyClients = map.get(invokeConfig);
-        if (!nettyClients.isEmpty()) {
+        if (null != nettyClients && !nettyClients.isEmpty()) {
             iterableMap.put(invokeConfig, nettyClients.iterator());
         }
     }
 
-    public static List<NettyClient> get(InvokeConfig invokeConfig) {
-        return map.get(invokeConfig);
+    public static void remove(InvokeConfig invokeConfig, HostInfo hostInfo) {
+        List<NettyClient> nettyClients = map.get(invokeConfig);
+        if (null != nettyClients && !nettyClients.isEmpty()) {
+            Iterator<NettyClient> iterator = nettyClients.iterator();
+            while (iterator.hasNext()) {
+                NettyClient client = iterator.next();
+                if (hostInfo.equals(client.getHostInfo())) {
+                    client.close();
+                    iterator.remove();
+                }
+            }
+            iterableMap.put(invokeConfig, iterator);
+        }
     }
 
-    public static NettyClient loadBalance(InvokeConfig invokeConfig) {
-        return loadBalance.load(invokeConfig);
+    public static List<NettyClient> get(InvokeConfig invokeConfig) {
+        List<NettyClient> nettyClients = map.get(invokeConfig);
+        if (null != nettyClients && !nettyClients.isEmpty()) {
+            return nettyClients;
+        }
+        try {
+            init(invokeConfig);
+        } catch (Exception e) {
+        }
+        List<NettyClient> clients = map.get(invokeConfig);
+        if (null == clients || clients.isEmpty()) {
+            throw new RuntimeException(String.format("not find provider,invokeConfig:%s", invokeConfig.toString()));
+        }
+        return clients;
+    }
+
+    public static Map<InvokeConfig, Iterator<?>> getIterableMap() {
+        return iterableMap;
+    }
+
+    public static void close() {
+        for (Map.Entry<?, List<NettyClient>> entry : map.entrySet()) {
+            Iterator<NettyClient> iterator = entry.getValue().iterator();
+            while (iterator.hasNext()) {
+                iterator.next().close();
+            }
+        }
     }
 }

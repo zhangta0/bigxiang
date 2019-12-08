@@ -19,7 +19,7 @@ public class NettyServerFactory {
         map.put(port, nettyServer);
     }
 
-    public static void get(Integer port, NettyServer nettyServer) {
+    public static void get(Integer port) {
         map.get(port);
     }
 
@@ -32,6 +32,15 @@ public class NettyServerFactory {
             Iterator<NettyServer> iterator = map.values().iterator();
             while (iterator.hasNext()) {
                 iterator.next().start();
+            }
+        }
+    }
+
+    public static void close() {
+        if (null != map && !map.isEmpty()) {
+            Iterator<NettyServer> iterator = map.values().iterator();
+            while (iterator.hasNext()) {
+                iterator.next().close();
             }
         }
     }

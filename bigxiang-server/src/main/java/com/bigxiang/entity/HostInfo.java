@@ -33,4 +33,30 @@ public class HostInfo {
         this.ip = ip;
         this.port = port;
     }
+
+    public HostInfo(String host) {
+        String[] s = host.split(":");
+        this.ip = s[0];
+        this.port = Integer.parseInt(s[1]);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        HostInfo o = (HostInfo) obj;
+        return ip.equals(o.getIp()) && port == o.getPort();
+    }
+
+    @Override
+    public int hashCode() {
+        return String.format("%s:%s", ip, port).hashCode();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("HostInfo{");
+        sb.append("ip='").append(ip).append('\'');
+        sb.append(", port=").append(port);
+        sb.append('}');
+        return sb.toString();
+    }
 }

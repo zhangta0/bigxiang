@@ -2,14 +2,16 @@ package com.bigxiang.registry;
 
 import com.bigxiang.config.ConfigContainer;
 import com.bigxiang.entity.HostInfo;
+import com.bigxiang.listener.InvokeClientListener;
+import com.bigxiang.listener.ZkConnectionStateListener;
+import com.bigxiang.log.LogFactory;
+import com.bigxiang.log.Logger;
 import com.bigxiang.provider.config.ProviderConfig;
 import com.bigxiang.util.HostIpUtil;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.recipes.cache.ChildData;
-import org.apache.curator.framework.recipes.cache.NodeCache;
-import org.apache.curator.framework.recipes.cache.NodeCacheListener;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
@@ -24,13 +26,15 @@ import java.util.List;
  */
 public class ZkRegistry {
 
+    private static final Logger LOGGER = LogFactory.getLogger(ZkRegistry.class);
     private static String path = "zookeeper/bigxiang";
-    private static String preix = "/";
-    static RetryPolicy policy = new ExponentialBackoffRetry(1000, 3);
-    static boolean isStart = false;
+    private static String prefix = "/";
+    private static RetryPolicy policy = new ExponentialBackoffRetry(1000, 3);
+    private static final ConfigContainer container = new ConfigContainer();
+    private static boolean isStart = false;
 
     static final CuratorFramework zkClient = CuratorFrameworkFactory.builder()
-            .connectString(ConfigContainer.getZkAddress())
+            .connectString(container.getZkAddress())
             .sessionTimeoutMs(5000)
             .connectionTimeoutMs(3000)
             .retryPolicy(policy)
@@ -41,41 +45,42 @@ public class ZkRegistry {
         if (!isStart) {
             zkClient.start();
             isStart = true;
+            zkClient.getConnectionStateListenable().addListener(new ZkConnectionStateListener());
         }
     }
 
     public void registry(ProviderConfig providerConfig) {
         try {
-
-            Stat stat = zkClient.checkExists().forPath(providerConfig.getUrl());
-            String path = preix + providerConfig.getUrl();
+            String path = prefix + providerConfig.getUrl();
+            Stat stat = zkClient.checkExists().forPath(path);
             if (null == stat) {
                 zkClient.create().withMode(CreateMode.PERSISTENT).forPath(path);
             }
-
-            final NodeCache cache = new NodeCache(zkClient, path, false);
-            cache.start(true);
-            cache.getListenable().addListener(new NodeCacheListener() {
-                @Override
-                public void nodeChanged() throws Exception {
-                    ChildData currentData = cache.getCurrentData();
-                }
-            });
             String host = HostIpUtil.getIpAddress() + ":" + providerConfig.getPort();
-            zkClient.create().withMode(CreateMode.EPHEMERAL).forPath(path + preix + host);
+            String childPath = path + prefix + host;
+            Stat childStat = zkClient.checkExists().forPath(childPath);
+            if (null == childStat) {
+                zkClient.create().withMode(CreateMode.EPHEMERAL).forPath(childPath);
+            }
         } catch (Exception e) {
-            System.exit(-1);
+            LOGGER.error("zk registry error,providerConfig:" + providerConfig.toString(), e);
         }
+    }
+
+    public void watch(InvokeClientListener listener) throws Exception {
+        PathChildrenCache pathChildrenCache = new PathChildrenCache(zkClient, prefix + listener.getInvokeConfig().getUrl(), true);
+        pathChildrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
+        pathChildrenCache.getListenable().addListener(listener);
     }
 
     public List<HostInfo> getHost(String url) {
         List<HostInfo> hostInfoList = new ArrayList<>();
         try {
-            List<String> childPathList = zkClient.getChildren().forPath(preix + url);
+            String path = prefix + url;
+            List<String> childPathList = zkClient.getChildren().forPath(path);
             if (!childPathList.isEmpty()) {
                 for (String childPath : childPathList) {
-                    String[] s = childPath.split(":");
-                    HostInfo hostInfo = new HostInfo(s[0], Integer.parseInt(s[1]));
+                    HostInfo hostInfo = new HostInfo(childPath);
                     hostInfoList.add(hostInfo);
                 }
             }

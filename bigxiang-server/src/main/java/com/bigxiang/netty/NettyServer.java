@@ -2,6 +2,8 @@ package com.bigxiang.netty;
 
 import com.bigxiang.handler.ByteStructToByteHandle;
 import com.bigxiang.handler.ByteToByteStructHandle;
+import com.bigxiang.log.LogFactory;
+import com.bigxiang.log.Logger;
 import com.bigxiang.provider.factory.NettyServerFactory;
 import com.bigxiang.provider.handle.DecodeHandle;
 import com.bigxiang.provider.handle.EncodeHandle;
@@ -19,6 +21,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  */
 public class NettyServer {
 
+    private static final Logger LOGGER = LogFactory.getLogger(NettyServer.class);
     private ServerBootstrap bootstrap;
     private int port;
     private boolean started;
@@ -51,7 +54,8 @@ public class NettyServer {
                 channel = future.channel();
                 started = true;
             } catch (Exception e) {
-                System.err.print("netty start fail");
+                LOGGER.error("netty.server start fail", e);
+                System.exit(1);
             }
         }
     }

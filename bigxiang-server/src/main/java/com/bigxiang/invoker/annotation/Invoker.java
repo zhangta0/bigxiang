@@ -1,5 +1,6 @@
 package com.bigxiang.invoker.annotation;
 
+import com.bigxiang.constant.InvokeType;
 import com.bigxiang.constant.SerializerEnum;
 
 import java.lang.annotation.*;
@@ -17,6 +18,8 @@ public @interface Invoker {
     String url() default "";
 
     int timeout() default 1000;
+
+    InvokeType invokeType() default InvokeType.SYNC;
 
     SerializerEnum serializer() default SerializerEnum.HESSIAN;
 }

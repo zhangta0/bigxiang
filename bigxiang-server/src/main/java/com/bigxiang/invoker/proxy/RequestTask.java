@@ -1,7 +1,8 @@
 package com.bigxiang.invoker.proxy;
 
+import com.bigxiang.exception.ProviderTimeoutException;
+
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -15,26 +16,24 @@ public class RequestTask {
     private boolean isDone = Boolean.FALSE;
     private ReentrantLock lock = new ReentrantLock();
     private Condition condition = lock.newCondition();
+    private Object response;
+    private Class returnType;
 
-    Object response;
-    Class<?> returnType;
-
-    public RequestTask(Class<?> returnType) {
+    public RequestTask(Class returnType) {
         this.returnType = returnType;
     }
 
-    public Object getResponse(long timeOut) {
+    public Object getResponse(long timeout) {
         if (!isDone) {
             try {
                 lock.lock();
-                if (condition.await(timeOut, TimeUnit.MILLISECONDS)) {
+                if (condition.await(timeout, TimeUnit.MILLISECONDS)) {
                     if (!isDone) {
-                        return new TimeoutException();
+                        return new ProviderTimeoutException("provider execute timeout,timeOut:" + timeout);
                     }
                     return response;
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
             } finally {
                 lock.unlock();
             }
@@ -53,16 +52,7 @@ public class RequestTask {
         }
     }
 
-    public boolean isDone() {
-        return isDone;
-    }
-
-    public RequestTask setDone(boolean done) {
-        isDone = done;
-        return this;
-    }
-
-    public Class<?> getReturnType() {
+    public Class getReturnType() {
         return returnType;
     }
 }

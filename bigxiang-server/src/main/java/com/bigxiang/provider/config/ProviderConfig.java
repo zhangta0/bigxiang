@@ -90,4 +90,16 @@ public class ProviderConfig {
     public List<Method> getMethods() {
         return methods;
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("ProviderConfig{");
+        sb.append("url='").append(url).append('\'');
+        sb.append(", port=").append(port);
+        sb.append(", interfaceName='").append(interfaceName).append('\'');
+        sb.append(", bean=").append(bean);
+        sb.append(", methods=").append(methods);
+        sb.append('}');
+        return sb.toString();
+    }
 }

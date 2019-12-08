@@ -1,9 +1,8 @@
 package com.bigxiang.invoker.proxy;
 
-import com.bigxiang.invoker.factory.InvokerClientFactory;
-import com.bigxiang.netty.NettyClient;
 import com.bigxiang.invoker.config.InvokeConfig;
 import com.bigxiang.invoker.entity.InvokeRequest;
+import com.bigxiang.netty.NettyClient;
 import com.bigxiang.util.ClassConvert;
 
 import java.lang.reflect.InvocationHandler;
@@ -25,7 +24,7 @@ public class InvokeInvocation implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        NettyClient client = InvokerClientFactory.loadBalance(invokeConfig);
+        NettyClient client = InvokerClientLoadBalance.loadBalance(invokeConfig);
         InvokeRequest request = new InvokeRequest();
         request.setArgs(ClassConvert.convert(method.getParameterTypes()));
         request.setInterfaceName(invokeConfig.getInterfaceClz().getName());
@@ -35,6 +34,7 @@ public class InvokeInvocation implements InvocationHandler {
         request.setValues(Arrays.asList(args));
         request.setTimeout(invokeConfig.getTimeout());
         request.setSerializer(invokeConfig.getSerializer());
+        request.setInvokeType(invokeConfig.getTypeEnum().code);
         return client.call(request);
     }
 }

@@ -1,6 +1,9 @@
 package com.bigxiang.invoker.handle;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.bigxiang.constant.MessageTypeCode;
+import com.bigxiang.constant.SerializerEnum;
 import com.bigxiang.entity.ByteStruct;
 import com.bigxiang.factory.SerializerFactory;
 import com.bigxiang.invoker.factory.RequestFactory;
@@ -33,7 +36,11 @@ public class ReceiveHandle extends SimpleChannelInboundHandler {
                 ProviderResponse response = serializer.deserialize(b.getBody(), ProviderResponse.class);
                 RequestTask requestTask = requestFactory.remove(response.getSeq());
                 if (null != requestTask) {
-                    requestTask.setResponse(response.getResult());
+                    Object o1 = response.getResult();
+                    if (b.getSerializeType() == SerializerEnum.JSON.code) {
+                        o1 = JSONObject.toJavaObject ((JSONObject) o1, requestTask.getReturnType());
+                    }
+                    requestTask.setResponse(o1);
                 }
             }
         }

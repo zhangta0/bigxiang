@@ -1,4 +1,4 @@
-package com.bigxiang.provider.core;
+package com.bigxiang.config;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -14,17 +14,17 @@ public class PortAutoGet {
     private static Integer port = null;
 
     public static int port() {
-        int initPort = 1024;
+        int initPort = 3012;
         ServerSocket serverSocket = null;
         if (null != port) {
             return port;
         }
         synchronized (PortAutoGet.class) {
             if (null == port) {
+                port = default_port;
                 while (true) {
                     try {
-                        serverSocket = new ServerSocket(default_port);
-                        port = default_port;
+                        serverSocket = new ServerSocket(port);
                         break;
                     } catch (IOException e) {
                         port = initPort++;

@@ -26,6 +26,8 @@ public class InvokeRequest implements Serializable {
 
     private long timeout;
 
+    private byte invokeType;
+
     private transient byte serializer;
 
     private transient Class<?> returnType;
@@ -111,16 +113,28 @@ public class InvokeRequest implements Serializable {
         return this;
     }
 
+    public byte getInvokeType() {
+        return invokeType;
+    }
+
+    public InvokeRequest setInvokeType(byte invokeType) {
+        this.invokeType = invokeType;
+        return this;
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("InvokeRequest{");
+        sb.append("seq=").append(seq);
         sb.append(", url='").append(url).append('\'');
         sb.append(", interfaceName='").append(interfaceName).append('\'');
         sb.append(", methodName='").append(methodName).append('\'');
         sb.append(", args=").append(args == null ? "null" : Arrays.asList(args).toString());
         sb.append(", values=").append(values);
         sb.append(", timeout=").append(timeout);
+        sb.append(", invokeType=").append(invokeType);
         sb.append(", serializer=").append(serializer);
+        sb.append(", returnType=").append(returnType);
         sb.append('}');
         return sb.toString();
     }

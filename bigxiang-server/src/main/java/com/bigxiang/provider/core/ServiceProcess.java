@@ -1,6 +1,9 @@
 package com.bigxiang.provider.core;
 
+import com.bigxiang.exception.ProviderException;
 import com.bigxiang.invoker.entity.InvokeRequest;
+import com.bigxiang.log.LogFactory;
+import com.bigxiang.log.Logger;
 import com.bigxiang.provider.factory.ProviderFactory;
 
 import java.lang.reflect.Method;
@@ -11,6 +14,8 @@ import java.lang.reflect.Method;
  * @author Zhon.Thao
  */
 public class ServiceProcess {
+
+    private static final Logger LOGGER = LogFactory.getLogger(ServiceProcess.class);
 
     public static Object process(InvokeRequest request) {
         Object object = ProviderFactory.getBean(request.getUrl());
@@ -23,7 +28,9 @@ public class ServiceProcess {
             }
             return method.invoke(object, objects);
         } catch (Exception e) {
-            throw new IllegalArgumentException("provider process fail");
+            String msg = "provider process fail,request" + request.toString();
+            LOGGER.error(msg, e);
+            return new ProviderException(msg, e);
         }
     }
 }

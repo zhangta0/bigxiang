@@ -1,27 +1,20 @@
-package com.bigxiang.listener;
+package com.bigxiang.start;
 
-import com.bigxiang.factory.LoadbalanceFactory;
-import com.bigxiang.factory.SerializerFactory;
 import com.bigxiang.invoker.annotation.Invoker;
 import com.bigxiang.invoker.config.InvokeConfig;
 import com.bigxiang.invoker.factory.InvokerClientFactory;
 import com.bigxiang.invoker.proxy.ProxyFactory;
+import com.bigxiang.listener.BigxiangListener;
+import com.bigxiang.netty.NettyServer;
 import com.bigxiang.provider.annotation.Provider;
 import com.bigxiang.provider.config.ProviderConfig;
-import com.bigxiang.provider.core.PortAutoGet;
 import com.bigxiang.provider.factory.NettyServerFactory;
 import com.bigxiang.provider.factory.ProviderFactory;
-import com.bigxiang.registry.ServiceRegistry;
-import com.bigxiang.netty.NettyServer;
 import com.google.common.collect.Lists;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
@@ -31,9 +24,7 @@ import java.lang.reflect.Field;
  *
  * @author Zhon.Thao
  */
-@Component
-@Order(1)
-public class BootListener implements ApplicationListener, BeanPostProcessor {
+public class BigxiangBoot extends BigxiangListener implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -51,6 +42,7 @@ public class BootListener implements ApplicationListener, BeanPostProcessor {
                 }
                 invokeConfig.setSerializer(invoker.serializer().code);
                 invokeConfig.setTimeout(invoker.timeout());
+                invokeConfig.setTypeEnum(invoker.invokeType());
                 field.setAccessible(true);
                 try {
                     InvokerClientFactory.init(invokeConfig);
@@ -73,7 +65,7 @@ public class BootListener implements ApplicationListener, BeanPostProcessor {
 
         Class[] interfaces = clz.getInterfaces();
         if (interfaces.length == 0) {
-            throw new RuntimeException("provider no interface");
+            throw new BeanCreationException("provider is not a interface,[beanName]" + beanName);
         }
 
         String url = provider.url();
@@ -84,21 +76,11 @@ public class BootListener implements ApplicationListener, BeanPostProcessor {
                 .Bean(bean)
                 .InterfaceName(interfaces[0].getName())
                 .Methods(Lists.newArrayList(interfaces[0].getMethods()))
-                .port(PortAutoGet.port())
+                .port(this.getServerPort())
                 .build();
 
         ProviderFactory.put(url, providerConfig);
         NettyServerFactory.put(providerConfig.getPort(), new NettyServer(providerConfig.getPort()));
         return bean;
-    }
-
-    @Override
-    public void onApplicationEvent(ApplicationEvent applicationEvent) {
-        if (applicationEvent instanceof ContextRefreshedEvent) {
-            SerializerFactory.init();
-            LoadbalanceFactory.init();
-            NettyServerFactory.start();
-            ServiceRegistry.toRegistry();
-        }
     }
 }

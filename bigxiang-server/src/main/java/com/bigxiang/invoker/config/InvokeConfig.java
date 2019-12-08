@@ -1,5 +1,7 @@
 package com.bigxiang.invoker.config;
 
+import com.bigxiang.constant.InvokeType;
+
 import java.io.Serializable;
 
 /**
@@ -14,6 +16,8 @@ public class InvokeConfig implements Serializable {
     private String url;
 
     private long timeout;
+
+    private InvokeType typeEnum;
 
     private byte serializer;
 
@@ -51,5 +55,26 @@ public class InvokeConfig implements Serializable {
     public InvokeConfig setInterfaceClz(Class interfaceClz) {
         this.interfaceClz = interfaceClz;
         return this;
+    }
+
+    public InvokeType getTypeEnum() {
+        return typeEnum;
+    }
+
+    public InvokeConfig setTypeEnum(InvokeType typeEnum) {
+        this.typeEnum = typeEnum;
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("InvokeConfig{");
+        sb.append("interfaceClz=").append(interfaceClz);
+        sb.append(", url='").append(url).append('\'');
+        sb.append(", timeout=").append(timeout);
+        sb.append(", typeEnum=").append(typeEnum);
+        sb.append(", serializer=").append(serializer);
+        sb.append('}');
+        return sb.toString();
     }
 }

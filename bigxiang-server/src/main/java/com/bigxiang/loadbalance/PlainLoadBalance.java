@@ -6,18 +6,19 @@ import com.bigxiang.loadbalance.iface.LoadBalance;
 import com.bigxiang.netty.NettyClient;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Created by zhangtao47 on 2019/11/26.
+ * Created by Zhon.Thao on 2019/11/26.
  *
- * @author zhangtao47
+ * @author Zhon.Thao
  */
-public class PlainLoadBalance implements LoadBalance {
+public class PlainLoadBalance extends LoadBalance {
 
     @Override
-    public NettyClient load(InvokeConfig invokeConfig) {
-        Map<InvokeConfig, Iterator<?>> iterableMap = InvokerClientFactory.iterableMap;
+    public NettyClient cal(InvokeConfig invokeConfig, List<NettyClient> nettyClients) {
+        Map<InvokeConfig, Iterator<?>> iterableMap = InvokerClientFactory.getIterableMap();
         if (!iterableMap.isEmpty()) {
             Iterator<?> iterator = iterableMap.get(invokeConfig);
             if (null != iterator) {
