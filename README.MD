@@ -66,7 +66,7 @@ public @interface Provider {
 > * random  随机取服务提供方节点
 
 
-### 8. 使用说明
+### 启动配置
 1.在项目中注入bigxiang的启动类
 ```
 <bean class="com.bigxiang.start.BigxiangBoot"/>
